@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Password Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Developed by Naresh Barua -->
+</head>
+<body>
+    <div class="container">
+        <h1>Generate a <br><span>Random Password</span></h1>
+
+        <div class="display">
+            <input type="text" id="password" placeholder="Your Password" readonly aria-live="assertive">
+            <img src="assets/copy.png" onclick="copyPassword()" alt="Copy Password to Clipboard" tabindex="0" role="button">
+        </div>
+        <div id="copy-notification" class="copy-notification" aria-live="polite">Copied to clipboard!</div>
+
+        <div class="option-group">
+            <label for="password-length">Password Length: <span id="length-value">12</span></label>
+            <input type="range" id="password-length" min="8" max="30" value="12" aria-valuemin="8" aria-valuemax="30" aria-valuenow="12">
+        </div>
+
+        <div class="option-group char-options">
+            <label class="section-label">Include:</label>
+            <div>
+                <input type="checkbox" id="include-uppercase" checked aria-checked="true">
+                <label for="include-uppercase">Uppercase (A-Z)</label>
+            </div>
+            <div>
+                <input type="checkbox" id="include-lowercase" checked aria-checked="true">
+                <label for="include-lowercase">Lowercase (a-z)</label>
+            </div>
+            <div>
+                <input type="checkbox" id="include-numbers" checked aria-checked="true">
+                <label for="include-numbers">Numbers (0-9)</label>
+            </div>
+            <div>
+                <input type="checkbox" id="include-symbols" checked aria-checked="true">
+                <label for="include-symbols">Symbols (!@#$%^&*()_+-={}[]|:;<>,.?/~\)</label>
+            </div>
+        </div>
+
+        <div class="option-group exclude-options">
+            <label class="section-label">Exclude:</label>
+            <div>
+                <input type="checkbox" id="exclude-ambiguous" aria-checked="false">
+                <label for="exclude-ambiguous">Ambiguous (l, 1, I, O, 0)</label>
+            </div>
+        </div>
+
+        <div class="strength-indicator" role="status" aria-live="polite">
+            Strength: <span id="password-strength">N/A</span>
+            <div class="strength-bar-container">
+                <div id="strength-bar" class="strength-bar"></div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button onclick="createPassword()" class="main-button">
+                <img src="assets/generate.png" alt="">Generate Password
+            </button>
+            <button onclick="createPassword()" class="secondary-button">Generate Again</button>
+            <button onclick="clearPasswordAndHistory()" class="secondary-button">Clear All</button>
+        </div>
+
+        <div class="password-history-section">
+            <h2>Password History <span id="history-count">(0)</span></h2>
+            <ul id="password-history" aria-live="polite"></ul>
+        </div>
+    </div>
+
+    <footer class="website-credit">
+        <p>Developed by Naresh Barua</p>
+    </footer>
+
+    <script>
+        const passwordBox = document.getElementById("password");
+        const lengthSlider = document.getElementById("password-length");
+        const lengthValueSpan = document.getElementById("length-value");
+        const includeUppercaseCheckbox = document.getElementById("include-uppercase");
+        const includeLowercaseCheckbox = document.getElementById("include-lowercase");
+        const includeNumbersCheckbox = document.getElementById("include-numbers");
+        const includeSymbolsCheckbox = document.getElementById("include-symbols");
+        const excludeAmbiguousCheckbox = document.getElementById("exclude-ambiguous");
+        const passwordStrengthSpan = document.getElementById("password-strength");
+        const strengthBar = document.getElementById("strength-bar");
+        const copyNotification = document.getElementById("copy-notification");
+        const passwordHistoryList = document.getElementById("password-history");
+        const historyCountSpan = document.getElementById("history-count");
+
+        const upperCaseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const lowerCaseChars = "abcdefghijklmnopqrstuvwxyz";
+        const numberChars = "0123456789";
+        const symbolChars = "!@#$%^&*()_+-={}[]|:;<>,.?/~";
+        const ambiguousChars = "l1IO0";
+
+        let passwordHistory = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lengthValueSpan.textContent = lengthSlider.value;
+            loadPasswordHistory();
+            updateHistoryDisplay();
+            createPassword();
+        });
+
+        lengthSlider.addEventListener("input", () => {
+            lengthValueSpan.textContent = lengthSlider.value;
+            createPassword();
+        });
+
+        [includeUppercaseCheckbox, includeLowercaseCheckbox, includeNumbersCheckbox, includeSymbolsCheckbox, excludeAmbiguousCheckbox].forEach(checkbox => {
+            checkbox.addEventListener("change", () => {
+                if (!includeUppercaseCheckbox.checked && !includeLowercaseCheckbox.checked && !includeNumbersCheckbox.checked && !includeSymbolsCheckbox.checked) {
+                    alert("Please select at least one character type.");
+                    checkbox.checked = true;
+                    return;
+                }
+                createPassword();
+            });
+        });
+
+        function createPassword() {
+            let passwordLength = parseInt(lengthSlider.value);
+            let selectedChars = "";
+            let generatedPassword = "";
+
+            if (includeUppercaseCheckbox.checked) selectedChars += upperCaseChars;
+            if (includeLowercaseCheckbox.checked) selectedChars += lowerCaseChars;
+            if (includeNumbersCheckbox.checked) selectedChars += numberChars;
+            if (includeSymbolsCheckbox.checked) selectedChars += symbolChars;
+
+            if (excludeAmbiguousCheckbox.checked) {
+                selectedChars = selectedChars.split('').filter(char => !ambiguousChars.includes(char)).join('');
+            }
+
+            if (selectedChars.length === 0) {
+                passwordBox.value = "";
+                updatePasswordStrength("");
+                alert("No character types selected. Please select at least one.");
+                return;
+            }
+
+            if (includeUppercaseCheckbox.checked) {
+                generatedPassword += upperCaseChars[Math.floor(Math.random() * upperCaseChars.length)];
+            }
+            if (includeLowercaseCheckbox.checked) {
+                generatedPassword += lowerCaseChars[Math.floor(Math.random() * lowerCaseChars.length)];
+            }
+            if (includeNumbersCheckbox.checked) {
+                generatedPassword += numberChars[Math.floor(Math.random() * numberChars.length)];
+            }
+            if (includeSymbolsCheckbox.checked) {
+                generatedPassword += symbolChars[Math.floor(Math.random() * symbolChars.length)];
+            }
+
+            while (generatedPassword.length < passwordLength) {
+                let char = selectedChars[Math.floor(Math.random() * selectedChars.length)];
+                if (excludeAmbiguousCheckbox.checked && ambiguousChars.includes(char)) {
+                    continue;
+                }
+                generatedPassword += char;
+            }
+
+            generatedPassword = generatedPassword.split('').sort(() => Math.random() - 0.5).join('');
+
+            passwordBox.value = generatedPassword;
+            updatePasswordStrength(generatedPassword);
+            addPasswordToHistory(generatedPassword);
+        }
+
+        function copyPassword() {
+            if (passwordBox.value) {
+                passwordBox.select();
+                navigator.clipboard.writeText(passwordBox.value)
+                    .then(() => {
+                        showCopyNotification();
+                    })
+                    .catch(err => {
+                        document.execCommand("copy");
+                        showCopyNotification();
+                    });
+            } else {
+                alert("Nothing to copy!");
+            }
+        }
+
+        function showCopyNotification() {
+            copyNotification.classList.add("visible");
+            setTimeout(() => {
+                copyNotification.classList.remove("visible");
+            }, 2000);
+        }
+
+        function updatePasswordStrength(password) {
+            let strength = 0;
+            const passwordLength = password.length;
+
+            if (passwordLength >= 8) strength++;
+            if (passwordLength >= 12) strength++;
+
+            let hasUppercase = /[A-Z]/.test(password);
+            let hasLowercase = /[a-z]/.test(password);
+            let hasNumbers = /[0-9]/.test(password);
+            let hasSymbols = /[!@#$%^&*()_+\-={}[\]|:;<>,.?/~]/.test(password);
+
+            if (hasUppercase) strength++;
+            if (hasLowercase) strength++;
+            if (hasNumbers) strength++;
+            if (hasSymbols) strength++;
+
+            let charTypeCount = [hasUppercase, hasLowercase, hasNumbers, hasSymbols].filter(Boolean).length;
+            if (charTypeCount === 1 && passwordLength < 16) {
+                strength = Math.max(0, strength - 2);
+            }
+
+            if (hasUppercase && hasLowercase && hasNumbers && hasSymbols) {
+                strength += 2;
+            }
+            if (passwordLength >= 16 && charTypeCount >= 3) {
+                strength += 1;
+            }
+            if (passwordLength >= 20 && charTypeCount >= 4) {
+                strength += 1;
+            }
+
+            let strengthText = "N/A";
+            let barColor = "transparent";
+
+            if (passwordLength === 0) {
+                 strengthText = "N/A";
+                 barColor = "transparent";
+            } else if (strength >= 8) {
+                strengthText = "Very Strong";
+                barColor = "#28a745";
+            } else if (strength >= 6) {
+                strengthText = "Strong";
+                barColor = "#20c997";
+            } else if (strength >= 4) {
+                strengthText = "Medium";
+                barColor = "#ffc107";
+            } else if (strength >= 2) {
+                strengthText = "Weak";
+                barColor = "#fd7e14";
+            } else {
+                strengthText = "Very Weak";
+                barColor = "#dc3545";
+            }
+
+            passwordStrengthSpan.textContent = strengthText;
+            strengthBar.style.width = (strength * 100 / 10) + '%';
+            strengthBar.style.backgroundColor = barColor;
+        }
+
+        function addPasswordToHistory(password) {
+            if (password && password !== passwordHistory[0]) {
+                passwordHistory.unshift(password);
+                if (passwordHistory.length > 5) {
+                    passwordHistory.pop();
+                }
+                updateHistoryDisplay();
+                savePasswordHistory();
+            }
+        }
+
+        function updateHistoryDisplay() {
+            passwordHistoryList.innerHTML = '';
+            if (passwordHistory.length === 0) {
+                const li = document.createElement("li");
+                li.textContent = "No history yet.";
+                li.style.fontStyle = "italic";
+                li.style.color = "#D55C5D";
+                passwordHistoryList.appendChild(li);
+            } else {
+                passwordHistory.forEach(pw => {
+                    const li = document.createElement("li");
+                    li.textContent = pw;
+                    li.classList.add('history-item');
+                    li.addEventListener('click', () => {
+                        navigator.clipboard.writeText(pw)
+                            .then(() => {
+                                showCopyNotification();
+                                passwordBox.value = pw;
+                                updatePasswordStrength(pw);
+                            })
+                            .catch(err => {});
+                    });
+                    passwordHistoryList.appendChild(li);
+                });
+            }
+            historyCountSpan.textContent = `(${passwordHistory.length})`;
+        }
+
+        function savePasswordHistory() {
+            sessionStorage.setItem('passwordHistory', JSON.stringify(passwordHistory));
+        }
+
+        function loadPasswordHistory() {
+            const storedHistory = sessionStorage.getItem('passwordHistory');
+            if (storedHistory) {
+                passwordHistory = JSON.parse(storedHistory);
+            }
+        }
+
+        function clearPasswordAndHistory() {
+            passwordBox.value = "";
+            passwordHistory = [];
+            updatePasswordStrength("");
+            updateHistoryDisplay();
+            savePasswordHistory();
+        }
+    </script>
+</body>
+</html>
