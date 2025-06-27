@@ -313,6 +313,18 @@
             updateHistoryDisplay();
             savePasswordHistory();
         }
+
+        document.addEventListener('mousemove', function(e) {
+    const x = (e.clientX / window.innerWidth - 0.5) * 2; // -1 to 1
+    const y = (e.clientY / window.innerHeight - 0.5) * 2; // -1 to 1
+
+    document.querySelector('.bg-blob1').style.transform =
+        `translate(${x * 40}px, ${y * 40}px)`;
+    document.querySelector('.bg-blob2').style.transform =
+        `translate(${x * -30}px, ${y * 30}px)`;
+    document.querySelector('.bg-blob3').style.transform =
+        `translate(${x * 20}px, ${y * -20}px)`;
+});
     </script>
 </body>
 </html>
