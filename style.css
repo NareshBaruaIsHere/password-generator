@@ -14,15 +14,94 @@
     box-sizing: border-box;
 }
 
-body{
+body {
+    position: relative;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
     background: #3D3B40;
     color: #F0EDD4;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
     padding: 20px;
+}
+
+/* Animated blurry glass blobs */
+body::before,
+body::after,
+body .bg-blob1,
+body .bg-blob2,
+body .bg-blob3 {
+    content: "";
+    position: fixed;
+    z-index: -1;
+    border-radius: 50%;
+    filter: blur(48px);
+    opacity: 0.6;
+    pointer-events: none;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+
+body::before {
+    width: 500px; height: 500px;
+    left: -150px; top: -100px;
+    background: radial-gradient(circle, #D55C5D 0%, #D55C5D88 70%, transparent 100%);
+    animation: blob1move 16s alternate infinite;
+}
+body::after {
+    width: 400px; height: 400px;
+    right: -120px; bottom: -80px;
+    background: radial-gradient(circle, #728A8B 0%, #728A8B88 70%, transparent 100%);
+    animation: blob2move 18s alternate infinite;
+}
+body .bg-blob1 {
+    width: 350px; height: 350px;
+    left: 60%; top: 10%;
+    background: radial-gradient(circle, #F0EDD4 0%, #F0EDD488 70%, transparent 100%);
+    animation: blob3move 20s alternate infinite;
+}
+body .bg-blob2 {
+    width: 300px; height: 300px;
+    left: 10%; bottom: 10%;
+    background: radial-gradient(circle, #3D3B40 0%, #3D3B4088 70%, transparent 100%);
+    animation: blob4move 22s alternate infinite;
+}
+body .bg-blob3 {
+    width: 250px; height: 250px;
+    right: 20%; top: 60%;
+    background: radial-gradient(circle, #D55C5D 0%, #D55C5D44 70%, transparent 100%);
+    animation: blob5move 24s alternate infinite;
+}
+
+/* Keyframes for each blob */
+@keyframes blob1move {
+    0%   { left: -150px; top: -100px; }
+    50%  { left: 20vw; top: 10vh; }
+    100% { left: -150px; top: -100px; }
+}
+@keyframes blob2move {
+    0%   { right: -120px; bottom: -80px; }
+    50%  { right: 10vw; bottom: 20vh; }
+    100% { right: -120px; bottom: -80px; }
+}
+@keyframes blob3move {
+    0%   { left: 60vw; top: 10vh; }
+    50%  { left: 50vw; top: 30vh; }
+    100% { left: 60vw; top: 10vh; }
+}
+@keyframes blob4move {
+    0%   { left: 10vw; bottom: 10vh; }
+    50%  { left: 30vw; bottom: 20vh; }
+    100% { left: 10vw; bottom: 10vh; }
+}
+@keyframes blob5move {
+    0%   { right: 20vw; top: 60vh; }
+    50%  { right: 30vw; top: 40vh; }
+    100% { right: 20vw; top: 60vh; }
 }
 
 .container{
